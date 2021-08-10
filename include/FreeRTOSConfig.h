@@ -4,6 +4,8 @@
 /* Here is a good place to include header files that are required across
 your application. */
 
+void vApplicationSleep(uint32_t xIdleTime);
+
 #define configUSE_PREEMPTION                    1
 #define configUSE_PORT_OPTIMISED_TASK_SELECTION 0
 #define configUSE_TICKLESS_IDLE                 0
@@ -89,6 +91,8 @@ your application. */
 #define xPortSysTickHandler freertos_systick_handler
 #define xPortPendSVHandler freertos_pendsv_handler
 #define vPortSVCHandler freertos_svc_handler
+
+#define portSUPPRESS_TICKS_AND_SLEEP(xIdleTime) vApplicationSleep(xIdleTime)
 
 /* A header file that defines trace macro can be included here. */
 

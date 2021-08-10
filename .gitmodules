@@ -1,0 +1,6 @@
+[submodule "cc13xx_cc26xxware"]
+	path = cc13xx_cc26xxware
+	url = git@github.com:imi415/cc13xx_cc26xxware.git
+[submodule "FreeRTOS"]
+	path = FreeRTOS
+	url = https://github.com/FreeRTOS/FreeRTOS-Kernel.git

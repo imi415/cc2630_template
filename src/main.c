@@ -61,6 +61,8 @@ void u_InitBootPeripherals(void) {
     // Enable clock gating
     PRCMPeripheralRunEnable(PRCM_PERIPH_GPIO);
     PRCMPeripheralRunEnable(PRCM_PERIPH_UART0);
+    PRCMPeripheralDeepSleepEnable(PRCM_PERIPH_GPIO);
+    PRCMPeripheralDeepSleepEnable(PRCM_PERIPH_UART0);
     
     // Sync changes
     PRCMLoadSet();

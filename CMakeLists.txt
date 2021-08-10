@@ -8,7 +8,7 @@ set(CMAKE_OBJCOPY      arm-none-eabi-objcopy)
 set(CMAKE_OBJDUMP      arm-none-eabi-objdump)
 set(SIZE               arm-none-eabi-size)
 
-set(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/cc26xxware_modified/linker_files/cc26x0f128.lds)
+set(LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/cc26x0f128.lds)
 
 set(COMMON_FLAGS
         "-march=armv7-m -mthumb -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections \
@@ -25,50 +25,46 @@ set(CMAKE_EXE_LINKER_FLAGS
 project(cc2630_template C ASM)
 set(CMAKE_C_STANDARD 11)
 
-set(TI_SOFTWARE_SRCS
-        "cc26xxware_modified/startup_files/startup_gcc.c"
-        "cc26xxware/startup_files/ccfg.c"
-        "cc26xxware/driverlib/*.*"
-)
-
-set(TI_SOFTWARE_INCS
-        cc26xxware
-)
-
-set(FREERTOS_SRCS
-        "FreeRTOS/Source/tasks.c"
-        "FreeRTOS/Source/queue.c"
-        "FreeRTOS/Source/timers.c"
-        "FreeRTOS/Source/event_groups.c"
-        "FreeRTOS/Source/list.c"
-        "FreeRTOS/Source/portable/GCC/ARM_CM3/port.c"
-        "FreeRTOS/Source/portable/MemMang/heap_4.c"
-)
-
-set(FREERTOS_INCS
-        FreeRTOS/Source/include
-        FreeRTOS/Source/portable/GCC/ARM_CM3
-)
-
-file(GLOB_RECURSE SOURCES
-        ${TI_SOFTWARE_SRCS}
-        ${FREERTOS_SRCS}
+file(GLOB_RECURSE APP_SOURCES
         "src/*.*"
 )
 
-include_directories(
-        ${TI_SOFTWARE_INCS}
-        ${FREERTOS_INCS}
-        include
+set(FREERTOS_SRCS
+        "FreeRTOS/tasks.c"
+        "FreeRTOS/queue.c"
+        "FreeRTOS/timers.c"
+        "FreeRTOS/event_groups.c"
+        "FreeRTOS/list.c"
+        "FreeRTOS/portable/GCC/ARM_CM3/port.c"
+        "FreeRTOS/portable/MemMang/heap_4.c"
 )
 
-add_definitions(
-        -D__weak=__attribute__\(\(weak\)\)
-        -D__packed=__attribute__\(\(__packed__\)\)
-        # -DDRIVERLIB_NOROM
+set(INCLUDE_DIRS
+        "cc13xx_cc26xxware/cc26xxware"
+        "FreeRTOS/include"
+        "FreeRTOS/portable/GCC/ARM_CM3"
+        "include"
 )
+
+set(COMPILER_DEFS
+        "-D__weak=__attribute__\(\(weak\)\)"
+        "-D__packed=__attribute__\(\(__packed__\)\)"
+        # "-DDRIVERLIB_NOROM"
+)
+
+set(SOURCES
+        ${FREERTOS_SRCS}
+        ${APP_SOURCES}
+        "startup_files/startup_gcc.c"
+        "startup_files/ccfg.c"
+)
+
+add_subdirectory(cc13xx_cc26xxware)
 
 add_executable(${PROJECT_NAME}.elf ${SOURCES} ${LINKER_SCRIPT})
+target_link_libraries(${PROJECT_NAME}.elf "cc26xxware")
+target_include_directories(${PROJECT_NAME}.elf PRIVATE ${INCLUDE_DIRS})
+target_compile_definitions(${PROJECT_NAME}.elf PRIVATE ${COMPILER_DEFS})
 
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map")
 set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS}")
