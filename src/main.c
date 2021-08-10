@@ -32,6 +32,8 @@ int main(int argc, char *argv[]) {
     u_InitBootInterruptHandlers();
     u_InitBootPeripherals();
 
+    UARTCharPut(UART0_BASE, 'a');
+
     printf("Hello world from a CC2630.\r\n");
 
     u_CreateUserTasks();

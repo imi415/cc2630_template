@@ -7,7 +7,7 @@
 
  This file is auto-generated.
 
-  Copyright (C) 2016 Texas Instruments Incorporated - http:www.ti.com/
+  Copyright (C) 2017 Texas Instruments Incorporated - http:www.ti.com/
 
 
   Redistribution and use in source and binary forms, with or without
@@ -58,7 +58,7 @@ MEMORY
 /*. Highest address of the stack. Used in startup file .*/
 _estack = ORIGIN(SRAM) + LENGTH(SRAM); /*end of SRAM .*/
 
-/*. Generate a link error if heap and stack don’t fit into RAM .*/
+/*. Generate a link error if heap and stack does not fit into RAM .*/
 _Min_Heap_Size = 0x100;
 _Min_Stack_Size = 0x100;
 
@@ -90,13 +90,22 @@ SECTIONS
         *(.ARM.extab* .gnu.linkonce.armextab.*)
     } > FLASH
 
+    .init_array :
+    {
+        _init_array = .;
+        KEEP(*(SORT(.init_array.*)))
+        KEEP(*(.init_array*))
+        _einit_array = .;
+    } > FLASH
+
     .data :
     {
         _data = .;
         *(vtable)
         *(.data*)
         _edata = .;
-    } > SRAM
+    } > SRAM AT > FLASH
+    _ldata = LOADADDR(.data);
 
     .bss :
     {
