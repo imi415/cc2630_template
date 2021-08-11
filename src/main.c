@@ -12,6 +12,7 @@
 #include "driverlib/aon_wuc.h"
 #include "driverlib/uart.h"
 #include "driverlib/osc.h"
+#include "driverlib/timer.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -23,6 +24,7 @@ void u_CreateUserTasks(void);
 
 /* Interrupt Handlers */
 void BusFaultHandler(void);
+void Timer3AIntHandler(void);
 
 void freertos_systick_handler(void);
 void freertos_pendsv_handler(void);
@@ -32,8 +34,7 @@ int main(int argc, char *argv[]) {
     u_InitBootInterruptHandlers();
     u_InitBootPeripherals();
 
-    UARTCharPut(UART0_BASE, 'a');
-
+    printf("\r\n\r\n");
     printf("Hello world from a CC2630.\r\n");
 
     u_CreateUserTasks();
@@ -46,6 +47,7 @@ int main(int argc, char *argv[]) {
 }
 
 void u_InitBootPeripherals(void) {
+
     // Switch to HF XOSC
 #ifndef DRIVERLIB_NOROM
     OSCClockSourceSet(OSC_SRC_CLK_HF, OSC_XOSC_HF);
@@ -57,14 +59,22 @@ void u_InitBootPeripherals(void) {
 
     // Enable power domains
     uint32_t prcm_domain_enabled = PRCM_DOMAIN_PERIPH \
-                                 | PRCM_DOMAIN_SERIAL;
+                                 | PRCM_DOMAIN_SERIAL
+                                 | PRCM_DOMAIN_TIMER;
     PRCMPowerDomainOn(prcm_domain_enabled);
 
     // Enable clock gating
     PRCMPeripheralRunEnable(PRCM_PERIPH_GPIO);
     PRCMPeripheralRunEnable(PRCM_PERIPH_UART0);
+    PRCMPeripheralRunEnable(PRCM_PERIPH_TIMER3);
+
+    PRCMPeripheralSleepEnable(PRCM_PERIPH_GPIO);
+    PRCMPeripheralSleepEnable(PRCM_PERIPH_UART0);
+    PRCMPeripheralSleepEnable(PRCM_PERIPH_TIMER3);
+
     PRCMPeripheralDeepSleepEnable(PRCM_PERIPH_GPIO);
     PRCMPeripheralDeepSleepEnable(PRCM_PERIPH_UART0);
+    PRCMPeripheralDeepSleepEnable(PRCM_PERIPH_TIMER3);
     
     // Sync changes
     PRCMLoadSet();
@@ -74,7 +84,7 @@ void u_InitBootPeripherals(void) {
         //
     }
 
-    // Enable UART
+    // Enable UART, 115200 8N1
     IOCPortConfigureSet(IOID_18, IOC_PORT_MCU_UART0_TX, IOC_IOMODE_NORMAL);
     IOCPortConfigureSet(IOID_19, IOC_PORT_MCU_UART0_RX, IOC_IOMODE_NORMAL);
 
@@ -104,6 +114,17 @@ void u_InitBootPeripherals(void) {
     IOCPortConfigureSet(IOID_20, IOC_PORT_GPIO, IOC_IOMODE_OPEN_DRAIN_NORMAL);
     GPIO_setOutputEnableDio(20, GPIO_OUTPUT_ENABLE);
     GPIO_clearDio(20);
+
+    // Enable Timer 3 for downcount msec timer
+    TimerConfigure(GPT3_BASE, TIMER_CFG_A_PERIODIC);
+    TimerPrescaleSet(GPT3_BASE, TIMER_A, 239); // prescaler, 24MHz / 240 = 100kHz, 10uS / LSB
+    TimerIntRegister(GPT3_BASE, TIMER_A, Timer3AIntHandler);
+    TimerIntEnable(GPT3_BASE, TIMER_TIMA_TIMEOUT);
+    TimerLoadSet(GPT3_BASE, TIMER_A, 20000); // 200ms
+    TimerEnable(GPT3_BASE, TIMER_A);
+
+    // Enable RTC
+    AONRTCEnable();
 }
 
 void u_InitBootInterruptHandlers(void) {

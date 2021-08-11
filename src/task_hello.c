@@ -9,16 +9,16 @@
 #include "driverlib/aon_wuc.h"
 #include "driverlib/osc.h"
 #include "driverlib/pwr_ctrl.h"
+#include "driverlib/timer.h"
 
 static void report_power_and_clocks(void);
 
 TaskHandle_t xUserTaskHelloHandle = NULL;
 void vUserTaskHello(void *pvParameters) {
     report_power_and_clocks();
-    AONRTCEnable();
     for(;;) {
-        GPIO_toggleDio(20);
-        printf("RTC second: %ld\r\n", AONRTCSecGet());
+        printf("RTC second: %ld\r", AONRTCSecGet());
+        fflush(stdout);
         vTaskDelay(500);
     }
 }
@@ -35,7 +35,7 @@ static void report_power_and_clocks(void) {
     printf("Current power supply: %s\r\n", ptr);
 
     // PRCM MCU PD
-    printf("=== Report PRCM/DDI status: ===\r\n");
+    puts("=== Report PRCM/DDI status: ===\r\n");
 
     ret = PRCMInfClockConfigureGet(PRCM_RUN_MODE);
     printf("Infrastructure clock: PRCM_CLOCK_DIV_%d\r\n", 1U << ret);
@@ -77,7 +77,7 @@ static void report_power_and_clocks(void) {
     }
     printf("LF clock source: %s\r\n", ptr);
     // AUX PD
-    printf("=== Report AUX/AON status: ===\r\n");
+    puts("=== Report AUX/AON status: ===\r\n");
 
     ret = AONWUCAuxClockConfigGet();
     printf("AUX clock: AUX_CLOCK_DIV_%d\r\n", 1U << ((ret >> 0x08U) + 1));

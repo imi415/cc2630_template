@@ -8,7 +8,7 @@
 #include "driverlib/aon_event.h"
 #include "driverlib/event.h"
 
-uint32_t _rtc_to_ticks(uint32_t sec, uint32_t frac) {
+static uint32_t rtc_to_ticks(uint32_t sec, uint32_t frac) {
     return (sec & 0xFFFFU) * configTICK_RATE_HZ + (frac >> 16U) * configTICK_RATE_HZ / 65536;
 }
 
