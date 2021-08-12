@@ -16,10 +16,19 @@ static void report_power_and_clocks(void);
 TaskHandle_t xUserTaskHelloHandle = NULL;
 void vUserTaskHello(void *pvParameters) {
     report_power_and_clocks();
+    uint32_t second;
+    uint32_t fraction;
     for(;;) {
-        printf("RTC second: %ld\r", AONRTCSecGet());
+        /*
+        * These must be called in order,
+        * a read operation to the second register 
+        * will latch the fraction register until its read.
+        */
+        second = AONRTCSecGet();
+        fraction = (AONRTCFractionGet() >> 24U) * 100 / 256; // Convert to decimal.
+        printf("RTC second: %lu.%lu\r", second, fraction);
         fflush(stdout);
-        vTaskDelay(500);
+        vTaskDelay(100);
     }
 }
 
@@ -35,7 +44,7 @@ static void report_power_and_clocks(void) {
     printf("Current power supply: %s\r\n", ptr);
 
     // PRCM MCU PD
-    puts("=== Report PRCM/DDI status: ===\r\n");
+    printf("=== Report PRCM/DDI status: ===\r\n");
 
     ret = PRCMInfClockConfigureGet(PRCM_RUN_MODE);
     printf("Infrastructure clock: PRCM_CLOCK_DIV_%d\r\n", 1U << ret);
@@ -76,8 +85,10 @@ static void report_power_and_clocks(void) {
         break;
     }
     printf("LF clock source: %s\r\n", ptr);
+    printf("==============================\r\n\r\n");
+
     // AUX PD
-    puts("=== Report AUX/AON status: ===\r\n");
+    printf("=== Report AUX/AON status: ===\r\n");
 
     ret = AONWUCAuxClockConfigGet();
     printf("AUX clock: AUX_CLOCK_DIV_%d\r\n", 1U << ((ret >> 0x08U) + 1));
@@ -88,4 +99,6 @@ static void report_power_and_clocks(void) {
     if(ret & AONWUC_MCU_POWER_ON)  printf(" | AONWUC_MCU_POWER_ON");
     if(ret & AONWUC_JTAG_POWER_ON) printf(" | AONWUC_JTAG_POWER_ON");
     printf("\r\n");
+    printf("==============================\r\n\r\n");
+    printf("Report done.\r\n");
 }
