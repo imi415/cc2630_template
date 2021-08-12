@@ -13,6 +13,7 @@
 #include "driverlib/uart.h"
 #include "driverlib/osc.h"
 #include "driverlib/timer.h"
+#include "driverlib/aon_rtc.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -116,11 +117,11 @@ void u_InitBootPeripherals(void) {
     GPIO_clearDio(20);
 
     // Enable Timer 3 for downcount msec timer
-    TimerConfigure(GPT3_BASE, TIMER_CFG_A_PERIODIC);
-    TimerPrescaleSet(GPT3_BASE, TIMER_A, 239); // prescaler, 24MHz / 240 = 100kHz, 10uS / LSB
+    TimerConfigure(GPT3_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_PERIODIC);
+    TimerPrescaleSet(GPT3_BASE, TIMER_A, 239); // prescaler, 48MHz / 240 = 200kHz, 5uS / LSB
     TimerIntRegister(GPT3_BASE, TIMER_A, Timer3AIntHandler);
     TimerIntEnable(GPT3_BASE, TIMER_TIMA_TIMEOUT);
-    TimerLoadSet(GPT3_BASE, TIMER_A, 20000); // 200ms
+    TimerLoadSet(GPT3_BASE, TIMER_A, 20000); // 100ms
     TimerEnable(GPT3_BASE, TIMER_A);
 
     // Enable RTC
